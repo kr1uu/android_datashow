@@ -1,0 +1,177 @@
+#Thread___________________  
+--------------------------------------MainActivity--------------------------------------
+package com.example.huynhphamquynhnhu.de04_activity;
+
+import android.graphics.Color;  
+import android.os.Bundle;  
+import android.os.Handler;  
+import android.os.Message;  
+import android.util.Log;  
+import android.view.View;  
+import android.view.ViewGroup;  
+import android.widget.Button;  
+import android.widget.LinearLayout;  
+
+import androidx.activity.EdgeToEdge;  
+import androidx.annotation.NonNull;  
+import androidx.appcompat.app.AppCompatActivity;  
+
+
+import com.example.huynhphamquynhnhu.de04_activity.databinding.ActivityMainBinding;
+
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+
+
+
+    ActivityMainBinding binding;  
+    Handler handler;  
+    Random random;  
+
+    // DE 2016 - 04
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        addEvents();
+        initHandler();
+    }
+
+    private void initHandler() {
+        handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(@NonNull Message msg) {
+                int [] randomNumber = (int[]) msg.obj;
+
+                LinearLayout rowLayout = new LinearLayout(MainActivity.this);
+                rowLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+                LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                rowLayout.setLayoutParams(rowParams);
+
+                LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                btnParams.setMargins(10, 10, 10, 10);
+
+                for (int randNumb: randomNumber) {
+                    Button btn = new Button(MainActivity.this);
+                    btn.setLayoutParams(btnParams);
+                    btn.setPadding(8, 8, 8, 8);
+                    btn.setTextColor(Color.WHITE);
+                    btn.setTextSize(22);
+                    btn.setText(String.valueOf(randNumb));
+
+                    if(randNumb % 2 == 0) {
+                        btn.setBackgroundColor(Color.GRAY);
+                    } else {
+                        btn.setBackgroundColor(Color.BLUE);
+                    }
+
+                    rowLayout.addView(btn);
+                }
+                binding.lnLayoutContainer.addView(rowLayout);
+                return false;
+            }
+        });
+    }
+
+    private void addEvents() {
+        binding.btnDraw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawView();
+            }
+        });
+    }
+
+    private void drawView() {
+        binding.lnLayoutContainer.removeAllViews();
+        int numberOfRows = Integer.parseInt(binding.edtNumber.getText().toString());
+
+        Thread threadDraw = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                random = new Random();
+               for (int i=1; i<=numberOfRows; i++) {
+                   int[] randNumber = new int[3];
+
+                   for (int j=0; j<3; j++) {
+                       randNumber[j] = random.nextInt(10);
+                   }
+
+                   Message msg = new Message();
+                   msg.obj = randNumber;
+                   handler.sendMessage(msg);
+
+                   try {
+                       Thread.sleep(145);
+                   } catch (InterruptedException e) {
+                       Log.i("Error!:", e.getMessage());
+                   }
+               }
+            }
+        });
+
+        threadDraw.start();
+    }
+
+
+}  
+------------------------------MainActivityEnd---------------------------------------  
+
+
+-----------------------------Activity_main_xml---------------------------------------    
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="?android:attr/actionBarSize"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <EditText
+            android:id="@+id/edtNumber"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/btnDraw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="@string/draw"
+            android:textStyle="bold"
+            android:textSize="25sp"/>
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/lnLayoutContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"/>
+    </ScrollView>
+
+</LinearLayout>
+-----------------------------------Activity_main_xml end-------------------------------------------  
